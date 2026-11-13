@@ -32,3 +32,12 @@ def test_resposta_vazia(requests_mock):
     requests_mock.post(URL, json={"message": {"content": ""}})
     with pytest.raises(LLMError, match="vazia"):
         gerar_ficha("pedido")
+
+def test_modelo_nao_encontrado(requests_mock):
+    requests_mock.post(URL, status_code=404, json={"error": "model not found"})
+    requests_mock.get(
+        "https://llm.teste:9001/api/tags",
+        json={"models": [{"name": "qwen3.5:4b"}]},
+    )
+    with pytest.raises(LLMError, match="qwen3.5:4b"):
+        gerar_ficha("pedido")

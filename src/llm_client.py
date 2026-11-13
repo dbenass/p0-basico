@@ -1,4 +1,6 @@
 import requests
+import urllib3
+
 from config import carregar_config
 
 
@@ -6,8 +8,37 @@ class LLMError(Exception):
     pass
 
 
+def _detalhe_erro(resp):
+    try:
+        return str(resp.json().get("error", ""))[:200]
+    except (ValueError, AttributeError):
+        return ""
+
+
+def _listar_modelos(cfg, headers):
+    try:
+        resp = requests.get(
+            f"{cfg['base_url']}/api/tags",
+            headers=headers,
+            timeout=cfg["timeout"],
+            verify=cfg["verify_ssl"],
+        )
+        return [m["name"] for m in resp.json().get("models", [])]
+    except (
+        requests.exceptions.RequestException,
+        ValueError,
+        KeyError,
+        TypeError,
+        AttributeError,
+    ):
+        return []
+
+
 def gerar_ficha(prompt):
     cfg = carregar_config()
+
+    if not cfg["verify_ssl"]:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     headers = {}
     if cfg["api_key"]:
@@ -38,6 +69,18 @@ def gerar_ficha(prompt):
 
     if resp.status_code in (401, 403):
         raise LLMError("Credencial ausente ou inválida.")
+    if resp.status_code == 404:
+        msg = (
+            f"Modelo ou endpoint não encontrado (HTTP 404). "
+            f"Verifique LLM_MODEL ('{cfg['model']}') e LLM_BASE_URL."
+        )
+        detalhe = _detalhe_erro(resp)
+        if detalhe:
+            msg += f" Resposta do servidor: {detalhe}"
+        modelos = _listar_modelos(cfg, headers)
+        if modelos:
+            msg += f" Modelos disponíveis: {', '.join(modelos)}."
+        raise LLMError(msg)
     if resp.status_code >= 500:
         raise LLMError("LLM indisponível no momento.")
     if resp.status_code != 200:
