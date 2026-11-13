@@ -116,7 +116,7 @@ tests/              testes automatizados
 
 - Sistema: Windows [11]
 - Python: [saída de `python --3.15.2`]
-- Resultado: 11 testes passaram.
+- Resultado: 13 testes passaram.
 - Problemas encontrados: nenhum.]
 
 ## Uso de IA no desenvolvimento

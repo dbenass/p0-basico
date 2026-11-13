@@ -9,14 +9,16 @@ class ConfigError(Exception):
 
 
 def carregar_config():
-    base_url = os.getenv("LLM_BASE_URL")
+    base_url = os.getenv("LLM_BASE_URL") or os.getenv("OLLAMA_HOST")
     if not base_url:
-        raise ConfigError("LLM_BASE_URL não configurada. Copie .env.example para .env.")
+        raise ConfigError(
+            "LLM_BASE_URL (ou OLLAMA_HOST) não configurada. Copie .env.example para .env."
+        )
 
     try:
-        timeout = float(os.getenv("LLM_TIMEOUT", "60"))
+        timeout = float(os.getenv("LLM_TIMEOUT", "180"))
         temperature = float(os.getenv("LLM_TEMPERATURE", "0.2"))
-        max_tokens = int(os.getenv("LLM_MAX_TOKENS", "1000"))
+        max_tokens = int(os.getenv("LLM_MAX_TOKENS", "2000"))
     except ValueError:
         raise ConfigError(
             "Valor inválido em LLM_TIMEOUT, LLM_TEMPERATURE ou LLM_MAX_TOKENS. "
