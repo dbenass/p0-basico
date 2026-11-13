@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 
 from config import ConfigError
@@ -30,9 +31,16 @@ def validar_pedido(pedido):
     return pedido
 
 
+def obter_pedido():
+    pedido = os.getenv("PEDIDO")
+    if pedido is None:
+        pedido = input("Digite o pedido do cliente:\n")
+    return validar_pedido(pedido)
+
+
 def main():
     try:
-        pedido = validar_pedido(input("Digite o pedido do cliente:\n"))
+        pedido = obter_pedido()
     except ValueError as e:
         print(f"\nErro: {e}")
         sys.exit(1)
