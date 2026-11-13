@@ -42,7 +42,7 @@ OBSERVAÇÕES: Nenhuma
 
 - Python 3.15.2 (testado com esta versão; o curso pede 3.10 ou superior)
 - Bibliotecas: `requests`, `python-dotenv`, `pytest`, `requests-mock`
-- Acesso ao LLM institucional (modelo `qwen3.5`, API compatível com Ollama)
+- Acesso ao LLM institucional (modelo `qwen3.5:9b`, API compatível com Ollama)
 
 ## Instalação
 
@@ -67,10 +67,10 @@ copy .env.example .env        # Linux/macOS: cp .env.example .env
 | `LLM_BASE_URL` | Endereço do servidor do LLM | (obrigatória) |
 | `LLM_MODEL` | Nome do modelo | `qwen3.5:9b` |
 | `LLM_API_KEY` | Credencial, se o serviço exigir | vazio |
-| `LLM_TIMEOUT` | Tempo máximo de espera, em segundos | `180` |
+| `LLM_TIMEOUT` | Tempo máximo de espera, em segundos | `300` |
 | `LLM_VERIFY_SSL` | Verificar o certificado SSL | `false` |
 | `LLM_TEMPERATURE` | Variação das respostas | `0.2` |
-| `LLM_MAX_TOKENS` | Limite de tokens da resposta | `2000` |
+| `LLM_MAX_TOKENS` | Limite de tokens da resposta | `800` |
 | `LLM_THINK` | Ativa o raciocínio interno do modelo (gasta tokens) | `false` |
 
 O arquivo `.env` contém dados de acesso e **não** é versionado. Nunca coloque credenciais reais no `.env.example`.
@@ -116,7 +116,7 @@ tests/              testes automatizados
 
 - Sistema: Windows [11]
 - Python: [saída de `python --3.15.2`]
-- Resultado: 13 testes passaram.
+- Resultado: 16 testes passaram.
 - Problemas encontrados: nenhum.]
 
 ## Uso de IA no desenvolvimento
