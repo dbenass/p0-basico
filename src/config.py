@@ -16,9 +16,9 @@ def carregar_config():
         )
 
     try:
-        timeout = float(os.getenv("LLM_TIMEOUT", "180"))
+        timeout = float(os.getenv("LLM_TIMEOUT", "300"))
         temperature = float(os.getenv("LLM_TEMPERATURE", "0.2"))
-        max_tokens = int(os.getenv("LLM_MAX_TOKENS", "2000"))
+        max_tokens = int(os.getenv("LLM_MAX_TOKENS", "800"))
     except ValueError:
         raise ConfigError(
             "Valor inválido em LLM_TIMEOUT, LLM_TEMPERATURE ou LLM_MAX_TOKENS. "
