@@ -10,8 +10,8 @@ def test_config_sem_url(monkeypatch):
 
 def test_config_parametros(monkeypatch):
     monkeypatch.setenv("LLM_BASE_URL", "https://x:1")
-    monkeypatch.setenv("LLM_MAX_TOKENS", "300")
-    assert carregar_config()["max_tokens"] == 300
+    monkeypatch.setenv("LLM_MAX_TOKENS", "800")
+    assert carregar_config()["max_tokens"] == 800
 
 
 def test_config_valor_invalido(monkeypatch):
