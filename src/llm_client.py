@@ -1,11 +1,14 @@
 import requests
 from config import carregar_config
 
+
 class LLMError(Exception):
     pass
 
+
 def gerar_ficha(prompt):
     cfg = carregar_config()
+
     headers = {}
     if cfg["api_key"]:
         headers["Authorization"] = f"Bearer {cfg['api_key']}"
@@ -14,6 +17,10 @@ def gerar_ficha(prompt):
         "model": cfg["model"],
         "messages": [{"role": "user", "content": prompt}],
         "stream": False,
+        "options": {
+            "temperature": cfg["temperature"],
+            "num_predict": cfg["max_tokens"],
+        },
     }
 
     try:
