@@ -1,10 +1,11 @@
 import logging
 import os
 import sys
+import threading
 from logging.handlers import RotatingFileHandler
 
 from config import ConfigError
-from llm_client import LLMError, gerar_ficha
+from llm_client import LLMError, gerar_ficha, listar_modelos_disponiveis
 
 
 def configurar_logs():
@@ -30,13 +31,20 @@ def configurar_logs():
 
 
 def criar_prompt(pedido):
-    return f"""
-Você é um assistente especializado em produção de placas de acrílico.
+    return f"""Você é um assistente especializado em produção de placas de acrílico.
 
-Analise o pedido e gere uma ficha estruturada.
+Analise o pedido e gere uma ficha estruturada. Responda apenas com a ficha, sem explicações, neste formato:
+
+EMPRESA:
+PRODUTO:
+MATERIAL:
+DIMENSÕES:
+PRAZO:
+OBSERVAÇÕES:
+
+Se alguma informação não estiver no pedido, escreva "não informado".
 
 Pedido:
-
 {pedido}
 """
 
@@ -55,6 +63,13 @@ def obter_pedido():
     return validar_pedido(pedido)
 
 
+def _acompanhar_espera(parar, intervalo=30):
+    segundos = 0
+    while not parar.wait(intervalo):
+        segundos += intervalo
+        logging.info("Aguardando resposta do LLM... %ds", segundos)
+
+
 def main():
     configurar_logs()
     logging.info("Aplicação iniciada")
@@ -66,15 +81,30 @@ def main():
         print(f"\nErro: {e}", flush=True)
         sys.exit(1)
 
+    try:
+        modelos = listar_modelos_disponiveis()
+    except ConfigError as e:
+        logging.error("Configuração inválida: %s", e)
+        print(f"\nErro: {e}", flush=True)
+        sys.exit(1)
+    if modelos:
+        logging.info("Servidor respondeu. Modelos: %s", ", ".join(modelos))
+    else:
+        logging.warning("Servidor não listou modelos (sem resposta ou lista vazia)")
+
     prompt = criar_prompt(pedido)
 
     logging.info("Enviando pedido ao LLM")
+    parar = threading.Event()
+    threading.Thread(target=_acompanhar_espera, args=(parar,), daemon=True).start()
     try:
         resultado = gerar_ficha(prompt)
     except (ConfigError, LLMError) as e:
         logging.error("Falha ao gerar ficha: %s", e)
         print(f"\nErro: {e}", flush=True)
         sys.exit(1)
+    finally:
+        parar.set()
 
     logging.info("Ficha gerada com sucesso (%d caracteres)", len(resultado))
     print("\n===== FICHA GERADA =====", flush=True)

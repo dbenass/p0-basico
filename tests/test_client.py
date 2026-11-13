@@ -1,6 +1,6 @@
 import pytest
 import requests
-from llm_client import gerar_ficha, LLMError
+from llm_client import gerar_ficha, listar_modelos_disponiveis, LLMError
 
 URL = "https://llm.teste:9001/api/chat"
 
@@ -62,3 +62,11 @@ def test_so_raciocinio_sem_resposta(requests_mock):
     )
     with pytest.raises(LLMError, match="raciocinando"):
         gerar_ficha("pedido")
+
+
+def test_listar_modelos_disponiveis(requests_mock):
+    requests_mock.get(
+        "https://llm.teste:9001/api/tags",
+        json={"models": [{"name": "qwen3.5:9b"}]},
+    )
+    assert listar_modelos_disponiveis() == ["qwen3.5:9b"]

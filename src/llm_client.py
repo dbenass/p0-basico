@@ -20,7 +20,7 @@ def _listar_modelos(cfg, headers):
         resp = requests.get(
             f"{cfg['base_url']}/api/tags",
             headers=headers,
-            timeout=cfg["timeout"],
+            timeout=min(cfg["timeout"], 15),
             verify=cfg["verify_ssl"],
         )
         return [m["name"] for m in resp.json().get("models", [])]
@@ -32,6 +32,16 @@ def _listar_modelos(cfg, headers):
         AttributeError,
     ):
         return []
+
+
+def listar_modelos_disponiveis():
+    cfg = carregar_config()
+    if not cfg["verify_ssl"]:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    headers = {}
+    if cfg["api_key"]:
+        headers["Authorization"] = f"Bearer {cfg['api_key']}"
+    return _listar_modelos(cfg, headers)
 
 
 def gerar_ficha(prompt):
