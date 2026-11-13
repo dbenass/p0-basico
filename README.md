@@ -65,12 +65,13 @@ copy .env.example .env        # Linux/macOS: cp .env.example .env
 | Variável | Descrição | Padrão |
 |---|---|---|
 | `LLM_BASE_URL` | Endereço do servidor do LLM | (obrigatória) |
-| `LLM_MODEL` | Nome do modelo | `qwen3.5` |
+| `LLM_MODEL` | Nome do modelo | `qwen3.5:9b` |
 | `LLM_API_KEY` | Credencial, se o serviço exigir | vazio |
-| `LLM_TIMEOUT` | Tempo máximo de espera, em segundos | `60` |
+| `LLM_TIMEOUT` | Tempo máximo de espera, em segundos | `180` |
 | `LLM_VERIFY_SSL` | Verificar o certificado SSL | `false` |
 | `LLM_TEMPERATURE` | Variação das respostas | `0.2` |
-| `LLM_MAX_TOKENS` | Limite de tokens da resposta | `1000` |
+| `LLM_MAX_TOKENS` | Limite de tokens da resposta | `2000` |
+| `LLM_THINK` | Ativa o raciocínio interno do modelo (gasta tokens) | `false` |
 
 O arquivo `.env` contém dados de acesso e **não** é versionado. Nunca coloque credenciais reais no `.env.example`.
 
@@ -115,7 +116,7 @@ tests/              testes automatizados
 
 - Sistema: Windows [11]
 - Python: [saída de `python --3.15.2`]
-- Resultado: 10 testes passaram.
+- Resultado: 11 testes passaram.
 - Problemas encontrados: nenhum.]
 
 ## Uso de IA no desenvolvimento

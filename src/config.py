@@ -25,10 +25,11 @@ def carregar_config():
 
     return {
         "base_url": base_url.rstrip("/"),
-        "model": os.getenv("LLM_MODEL", "qwen3.5"),
+        "model": os.getenv("LLM_MODEL", "qwen3.5:9b"),
         "api_key": os.getenv("LLM_API_KEY", ""),
         "timeout": timeout,
         "verify_ssl": os.getenv("LLM_VERIFY_SSL", "false").lower() == "true",
         "temperature": temperature,
         "max_tokens": max_tokens,
+        "think": os.getenv("LLM_THINK", "false").lower() == "true",
     }

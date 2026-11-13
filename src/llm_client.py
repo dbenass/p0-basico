@@ -48,6 +48,7 @@ def gerar_ficha(prompt):
         "model": cfg["model"],
         "messages": [{"role": "user", "content": prompt}],
         "stream": False,
+        "think": cfg["think"],
         "options": {
             "temperature": cfg["temperature"],
             "num_predict": cfg["max_tokens"],
@@ -87,10 +88,16 @@ def gerar_ficha(prompt):
         raise LLMError(f"Erro inesperado do LLM (HTTP {resp.status_code}).")
 
     try:
-        texto = resp.json()["message"]["content"].strip()
-    except (ValueError, KeyError, TypeError):
+        mensagem = resp.json()["message"]
+        texto = (mensagem.get("content") or "").strip()
+    except (ValueError, KeyError, TypeError, AttributeError):
         raise LLMError("Resposta do LLM em formato inesperado.")
 
     if not texto:
+        if mensagem.get("thinking"):
+            raise LLMError(
+                "O LLM gastou o limite de tokens raciocinando e não gerou a ficha. "
+                "Aumente LLM_MAX_TOKENS ou mantenha LLM_THINK=false."
+            )
         raise LLMError("O LLM retornou uma resposta vazia.")
     return texto
