@@ -8,6 +8,10 @@ class ConfigError(Exception):
     pass
 
 
+def _bool(nome, padrao="false"):
+    return os.getenv(nome, padrao).lower() == "true"
+
+
 def carregar_config():
     base_url = os.getenv("LLM_BASE_URL") or os.getenv("OLLAMA_HOST")
     if not base_url:
@@ -18,7 +22,7 @@ def carregar_config():
     try:
         timeout = float(os.getenv("LLM_TIMEOUT", "300"))
         temperature = float(os.getenv("LLM_TEMPERATURE", "0.2"))
-        max_tokens = int(os.getenv("LLM_MAX_TOKENS", "800"))
+        max_tokens = int(os.getenv("LLM_MAX_TOKENS", "500"))
     except ValueError:
         raise ConfigError(
             "Valor inválido em LLM_TIMEOUT, LLM_TEMPERATURE ou LLM_MAX_TOKENS. "
@@ -30,8 +34,9 @@ def carregar_config():
         "model": os.getenv("LLM_MODEL", "qwen3.5:9b"),
         "api_key": os.getenv("LLM_API_KEY", ""),
         "timeout": timeout,
-        "verify_ssl": os.getenv("LLM_VERIFY_SSL", "false").lower() == "true",
+        "verify_ssl": _bool("LLM_VERIFY_SSL"),
         "temperature": temperature,
         "max_tokens": max_tokens,
-        "think": os.getenv("LLM_THINK", "false").lower() == "true",
+        "think": _bool("LLM_THINK"),
+        "diagnostico": _bool("LLM_DIAGNOSTICO"),
     }

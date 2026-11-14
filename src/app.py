@@ -4,7 +4,7 @@ import sys
 import threading
 from logging.handlers import RotatingFileHandler
 
-from config import ConfigError
+from config import ConfigError, carregar_config
 from llm_client import LLMError, gerar_ficha, listar_modelos_disponiveis
 
 
@@ -75,22 +75,25 @@ def main():
     logging.info("Aplicação iniciada")
 
     try:
+        cfg = carregar_config()
+    except ConfigError as e:
+        logging.error("Configuração inválida: %s", e)
+        print(f"\nErro: {e}", flush=True)
+        sys.exit(1)
+
+    try:
         pedido = obter_pedido()
     except ValueError as e:
         logging.error("Pedido inválido: %s", e)
         print(f"\nErro: {e}", flush=True)
         sys.exit(1)
 
-    try:
+    if cfg["diagnostico"]:
         modelos = listar_modelos_disponiveis()
-    except ConfigError as e:
-        logging.error("Configuração inválida: %s", e)
-        print(f"\nErro: {e}", flush=True)
-        sys.exit(1)
-    if modelos:
-        logging.info("Servidor respondeu. Modelos: %s", ", ".join(modelos))
-    else:
-        logging.warning("Servidor não listou modelos (sem resposta ou lista vazia)")
+        if modelos:
+            logging.info("Servidor respondeu. Modelos: %s", ", ".join(modelos))
+        else:
+            logging.warning("Servidor não listou modelos")
 
     prompt = criar_prompt(pedido)
 
