@@ -171,6 +171,18 @@ tests/              testes automatizados
 Dockerfile          imagem para a plataforma
 ```
 
+## Validação em ambiente limpo
+
+Em 14/11/2026, baixei o projeto da branch `dev` do GitHub (ZIP) e extraí em uma pasta nova, fora do projeto original. Segui as instruções deste README: criei um novo `.venv`, instalei as dependências com `pip install -r requirements.txt`, copiei o `.env.example` para `.env` e executei `python -m pytest -v`.
+
+- Sistema: Microsoft Windows 11 Home Single Language
+- Python: 3.15.2
+- Resultado dos testes: 19 testes passaram
+- Execução do app sem acesso ao LLM (endereço de exemplo): exibiu a mensagem "Falha na comunicação com o LLM. Verifique LLM_BASE_URL.", sem traceback
+- Pedido vazio: rejeitado com a mensagem "O pedido não pode estar vazio."
+- Problemas encontrados e correções: nenhum
+
+
 ## Uso de IA no desenvolvimento
 
 Utilizei o Claude (Anthropic) como apoio durante o desenvolvimento: orientação sobre a estrutura do projeto, revisão e correção de código, rascunhos de testes e da documentação. Todo o código foi executado, testado e revisado por mim, e as decisões sobre o problema, o escopo e os testes foram minhas.
