@@ -10,39 +10,46 @@ Um funcionário responsável por receber pedidos de placas de acrílico precisa 
 
 Funcionários responsáveis pelo atendimento e preparação de pedidos.
 
-## Justificativa para uso de LLM
+## Por que usar um LLM
 
-Os clientes escrevem seus pedidos em linguagem natural, sem um formato padronizado. Um modelo de linguagem consegue interpretar diferentes formas de escrita e extrair informações relevantes para uma ficha de produção.
+Os clientes escrevem seus pedidos em linguagem natural, sem formato padronizado. Um modelo de linguagem consegue interpretar diferentes formas de escrita e extrair as informações relevantes para a ficha.
 
 ## Entrada e saída
 
-- **Entrada:** texto livre com o pedido do cliente, digitado no terminal.
-- **Saída:** ficha de produção em texto, com campos como empresa, produto, material, dimensões, prazo e observações.
+- **Entrada:** texto livre com o pedido do cliente.
+- **Saída:** ficha de produção em texto, com seis campos fixos: empresa, produto, material, dimensões, prazo e observações.
 
-### Exemplo
+### Como o pedido é informado
 
-Entrada:
+- **Execução local:** o programa pede o pedido pelo terminal.
+- **Plataforma (container):** o Devel LLM Portal não oferece terminal interativo, então o pedido é informado pela variável de ambiente `PEDIDO`, e o resultado é lido no botão **Logs**.
+
+Se `PEDIDO` estiver definida (inclusive no `.env`), o programa não pede a digitação.
+
+### Exemplo real
+
+Entrada (pedido fictício):
 
 ```
-Preciso de uma placa de acrílico 60x40 para a empresa Alfa, entrega até sexta.
+Placa de acrilico 60x40 para a empresa Alfa, entrega sexta
 ```
 
-Saída (exemplo ilustrativo):
+Saída, obtida na execução real em 13/11/2026:
 
 ```
 EMPRESA: Alfa
-PRODUTO: Placa
+PRODUTO: Placa de acrílico
 MATERIAL: Acrílico
 DIMENSÕES: 60x40
 PRAZO: Sexta-feira
-OBSERVAÇÕES: Nenhuma
+OBSERVAÇÕES: não informado
 ```
 
 ## Requisitos
 
-- Python 3.15.2 (testado com esta versão; o curso pede 3.10 ou superior)
-- Bibliotecas: `requests`, `python-dotenv`, `pytest`, `requests-mock`
-- Acesso ao LLM institucional (modelo `qwen3.5:9b`, API compatível com Ollama)
+- Python 3.15.2 (desenvolvimento local). A imagem Docker usa Python 3.12.
+- Bibliotecas, com versões fixadas em `requirements.txt`: `requests` (chamada HTTP), `python-dotenv` (leitura do `.env`), `pytest` e `requests-mock` (testes).
+- Acesso ao LLM institucional: modelo `qwen3.5:9b`, API REST compatível com Ollama.
 
 ## Instalação
 
@@ -56,7 +63,7 @@ pip install -r requirements.txt
 
 ## Configuração
 
-Copie o arquivo de exemplo e ajuste os valores:
+Copie o arquivo de exemplo:
 
 ```bash
 copy .env.example .env        # Linux/macOS: cp .env.example .env
@@ -64,24 +71,53 @@ copy .env.example .env        # Linux/macOS: cp .env.example .env
 
 | Variável | Descrição | Padrão |
 |---|---|---|
-| `LLM_BASE_URL` | Endereço do servidor do LLM | (obrigatória) |
-| `LLM_MODEL` | Nome do modelo | `qwen3.5:9b` |
+| `LLM_BASE_URL` | Endereço do servidor do LLM (aceita também `OLLAMA_HOST`) | obrigatória |
+| `LLM_MODEL` | Nome exato do modelo | `qwen3.5:9b` |
 | `LLM_API_KEY` | Credencial, se o serviço exigir | vazio |
 | `LLM_TIMEOUT` | Tempo máximo de espera, em segundos | `300` |
 | `LLM_VERIFY_SSL` | Verificar o certificado SSL | `false` |
 | `LLM_TEMPERATURE` | Variação das respostas | `0.2` |
-| `LLM_MAX_TOKENS` | Limite de tokens da resposta | `800` |
+| `LLM_MAX_TOKENS` | Limite de tokens da resposta | `500` |
 | `LLM_THINK` | Ativa o raciocínio interno do modelo (gasta tokens) | `false` |
+| `LLM_DIAGNOSTICO` | Lista os modelos do servidor ao iniciar | `false` |
+| `LOG_DIR` | Pasta do arquivo de log | `logs` |
+| `PEDIDO` | Pedido informado sem digitação (usado no container) | vazio |
 
-O arquivo `.env` contém dados de acesso e **não** é versionado. Nunca coloque credenciais reais no `.env.example`.
+O `.env` contém dados de acesso e **não** é versionado. O `.env.example` não tem credenciais.
 
-O servidor `llm-internal.softex:9001` usa certificado autoassinado, por isso a verificação SSL fica desabilitada (`LLM_VERIFY_SSL=false`). Ele só é acessível por aplicações executadas dentro do ambiente da plataforma, não pela máquina local.
+## Onde a aplicação funciona
+
+O servidor do LLM (`llm-internal.softex:9001`) usa certificado autoassinado, por isso a verificação SSL fica desabilitada. Ele só é acessível por aplicações executadas dentro do ambiente da plataforma Devel LLM Portal. Na máquina local, a aplicação exibe uma mensagem de erro de conexão (comportamento esperado), e os testes usam integração simulada.
 
 ## Execução
+
+Local (mostra o tratamento de erro, pois o servidor não é alcançável):
 
 ```bash
 python src/app.py
 ```
+
+Na plataforma (chamada real): gere a imagem, salve em `.tar` e envie pelo portal.
+
+```bash
+docker build -t seu-identificador:latest .
+docker save --output seu-identificador.tar seu-identificador:latest
+```
+
+Variáveis informadas no portal:
+
+```
+LLM_BASE_URL=https://llm-internal.softex:9001
+LLM_MODEL=qwen3.5:9b
+LLM_VERIFY_SSL=false
+LLM_TIMEOUT=300
+LLM_MAX_TOKENS=500
+LLM_THINK=false
+LOG_DIR=/persistent/logs
+PEDIDO=Placa de acrilico 60x40 para a empresa Alfa, entrega sexta
+```
+
+Como o aplicativo é de terminal, o container executa uma vez e termina (estado "Parado"). O resultado fica no botão **Logs**, que é apagado a cada novo início. Alterações de variáveis só valem depois de parar e iniciar o container.
 
 ## Testes
 
@@ -89,17 +125,41 @@ python src/app.py
 python -m pytest -v
 ```
 
-Os testes **não** fazem chamada real ao LLM e não consomem tokens. Eles usam integração simulada (`requests_mock`) e cobrem: resposta de sucesso, credencial inválida, LLM indisponível, timeout, resposta vazia, validação de pedido vazio, montagem do prompt e carregamento da configuração.
-
-A chamada **real** ao LLM só foi demonstrada [descreva onde e quando, por exemplo: "executando o container na plataforma Devel LLM Portal"].
+| Tipo | O que cobre | Chamada ao LLM |
+|---|---|---|
+| **Simulados** (`requests-mock`) | sucesso, credencial inválida, credencial não exposta no erro, LLM indisponível, timeout, falha genérica de rede, resposta vazia, resposta só com raciocínio, modelo não encontrado (404), parâmetros enviados | não, sem custo de tokens |
+| **Lógica local** | validação de pedido vazio, montagem do prompt com formato fixo, carregamento e validação da configuração | não |
+| **Real** | execução do container na plataforma | sim, descrita abaixo |
 
 ## Tratamento de erros
 
-O programa mostra mensagens claras, sem traceback, para: pedido vazio, configuração ausente ou inválida, credencial ausente ou inválida, LLM indisponível, falha de comunicação, timeout e resposta vazia ou em formato inesperado.
+O programa mostra mensagens claras, sem traceback, para: pedido vazio, configuração ausente ou inválida, credencial ausente ou inválida, LLM indisponível, falha de comunicação, timeout, resposta vazia ou em formato inesperado.
 
 ## Logs
 
-A execução é registrada em `logs/app.log`. O log guarda apenas o resultado da execução (sucesso ou falha). Ele **não** registra chaves, credenciais, o pedido do cliente nem o conteúdo da ficha.
+O log vai para o terminal e para um arquivo com rotação (`LOG_DIR`, `/persistent/logs` na plataforma, único diretório que mantém dados quando o container para). Registra apenas eventos de execução e tempos informados pelo servidor. **Não** registra chaves, credenciais, o pedido do cliente nem o conteúdo da ficha.
+
+## Execução real na plataforma
+
+Em 13/11/2026, executei a aplicação como container no Devel LLM Portal, com o modelo `qwen3.5:9b` e um pedido fictício. O log registrou a ficha gerada com sucesso (122 caracteres). A chamada ao modelo levou cerca de 100 segundos, e a execução completa cerca de 2 minutos.
+
+Problemas encontrados durante a execução real e correções:
+
+| Problema | Causa | Correção |
+|---|---|---|
+| HTTP 404 | nome do modelo incompleto (`qwen3.5`) | usar o nome exato `qwen3.5:9b`; a mensagem de erro passou a listar os modelos disponíveis |
+| Resposta vazia | o modelo gastava os tokens raciocinando | enviar `think: false` e tratar resposta só com raciocínio |
+| Ficha fora do formato | prompt sem formato definido | prompt com os seis campos fixos e teste automatizado |
+| Log vazio no portal | log gravado só em arquivo | log também no terminal, com aviso periódico de espera |
+
+## Decisões de projeto
+
+- **Chamada HTTP direta (`requests`)**, isolada em `llm_client.py`, para o código ficar simples e fácil de testar sem consumir tokens.
+- **Etapas separadas:** captura da entrada, configuração, montagem da solicitação, chamada, tratamento da resposta e apresentação ficam em funções distintas.
+- **Configuração por variáveis de ambiente**, para trocar modelo, tempo limite e parâmetros sem alterar o código.
+- **Verificação SSL desabilitada** por exigência da plataforma (certificado autoassinado).
+- **Raciocínio do modelo desligado**, porque consumia tokens e deixava a resposta vazia.
+- **Logs sem o conteúdo do pedido**, por privacidade e conformidade com a LGPD.
 
 ## Estrutura
 
@@ -108,17 +168,9 @@ src/app.py          entrada, prompt e apresentação
 src/config.py       carregamento da configuração
 src/llm_client.py   cliente HTTP do LLM
 tests/              testes automatizados
+Dockerfile          imagem para a plataforma
 ```
-
-## Validação em ambiente limpo
-
-[Clonei o repositório em uma pasta nova, fora do projeto original, e segui apenas as instruções deste README: criei um novo `.venv`, instalei as dependências, copiei o `.env.example` para `.env` e executei `python -m pytest -v`.
-
-- Sistema: Windows [11]
-- Python: [saída de `python --3.15.2`]
-- Resultado: 16 testes passaram.
-- Problemas encontrados: nenhum.]
 
 ## Uso de IA no desenvolvimento
 
-[Usei o Claude para orientar a estrutura do projeto, revisar o código e gerar rascunhos de testes e documentação. Todo o código foi executado, testado e revisado por mim.]
+Utilizei o Claude (Anthropic) como apoio durante o desenvolvimento: orientação sobre a estrutura do projeto, revisão e correção de código, rascunhos de testes e da documentação. Todo o código foi executado, testado e revisado por mim, e as decisões sobre o problema, o escopo e os testes foram minhas.
