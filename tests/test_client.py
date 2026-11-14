@@ -22,6 +22,14 @@ def test_credencial_invalida(requests_mock):
         gerar_ficha("pedido")
 
 
+def test_erro_nao_expoe_credencial(requests_mock, monkeypatch):
+    monkeypatch.setenv("LLM_API_KEY", "segredo-123")
+    requests_mock.post(URL, status_code=401)
+    with pytest.raises(LLMError) as exc:
+        gerar_ficha("pedido")
+    assert "segredo-123" not in str(exc.value)
+
+
 def test_indisponivel(requests_mock):
     requests_mock.post(URL, status_code=503)
     with pytest.raises(LLMError, match="indisponível"):
@@ -31,6 +39,12 @@ def test_indisponivel(requests_mock):
 def test_timeout(requests_mock):
     requests_mock.post(URL, exc=requests.exceptions.Timeout)
     with pytest.raises(LLMError, match="timeout"):
+        gerar_ficha("pedido")
+
+
+def test_falha_generica_de_rede(requests_mock):
+    requests_mock.post(URL, exc=requests.exceptions.InvalidURL)
+    with pytest.raises(LLMError, match="comunicação"):
         gerar_ficha("pedido")
 
 
