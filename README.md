@@ -87,7 +87,7 @@ O `.env` contém dados de acesso e **não** é versionado. O `.env.example` não
 
 ## Onde a aplicação funciona
 
-O servidor do LLM (`llm-internal.softex:9001`) usa certificado autoassinado, por isso a verificação SSL fica desabilitada. Ele só é acessível por aplicações executadas dentro do ambiente da plataforma Devel LLM Portal. Na máquina local, a aplicação exibe uma mensagem de erro de conexão (comportamento esperado), e os testes usam integração simulada.
+O servidor do LLM disponibilizado no guia da plataforma (`https://ENDERECO-DO-LLM:PORTA`) usa certificado autoassinado, por isso a verificação SSL fica desabilitada. Ele só é acessível por aplicações executadas dentro do ambiente da plataforma Devel LLM Portal. Na máquina local, a aplicação exibe uma mensagem de erro de conexão (comportamento esperado), e os testes usam integração simulada.
 
 ## Execução
 
@@ -107,7 +107,7 @@ docker save --output seu-identificador.tar seu-identificador:latest
 Variáveis informadas no portal:
 
 ```
-LLM_BASE_URL=https://llm-internal.softex:9001
+LLM_BASE_URL=https://ENDERECO-DO-LLM:PORTA
 LLM_MODEL=qwen3.5:9b
 LLM_VERIFY_SSL=false
 LLM_TIMEOUT=300
