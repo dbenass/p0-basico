@@ -9,3 +9,9 @@ def test_pedido_vazio():
 
 def test_prompt_contem_pedido():
     assert "placa 60x40" in criar_prompt("placa 60x40")
+
+
+def test_prompt_pede_formato_fixo():
+    prompt = criar_prompt("pedido de teste")
+    for campo in ["EMPRESA:", "PRODUTO:", "MATERIAL:", "DIMENSÕES:", "PRAZO:", "OBSERVAÇÕES:"]:
+        assert campo in prompt
